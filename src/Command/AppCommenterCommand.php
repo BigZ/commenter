@@ -19,12 +19,12 @@ class AppCommenterCommand extends Command
     protected function configure()
     {
         $this
-            ->setDescription('Add a short description for your command')
+            ->setDescription('Soundcloud commenter')
             ->addArgument('clientId', InputArgument::REQUIRED, 'client id')
             ->addArgument('clientSecret', InputArgument::REQUIRED, 'client secret')
             ->addArgument('username', InputArgument::REQUIRED, 'username')
             ->addArgument('password', InputArgument::REQUIRED, 'password')
-            ->addArgument('artist', InputArgument::REQUIRED, 'artist')
+            ->addArgument('artist', InputArgument::REQUIRED, 'artist to leech from')
         ;
     }
 
@@ -44,7 +44,7 @@ class AppCommenterCommand extends Command
         foreach ($toFollow as $prospect) {
             if ($souncloud->follow($prospect)) {
                 $souncloud->commentLastTrack($prospect);
-                sleep(20 + mt_rand(0, 100));
+                sleep(60 + mt_rand(0, 120));
             }
         }
     }
