@@ -5,9 +5,7 @@ namespace App\Command;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Style\SymfonyStyle;
 
 use App\Service\Soundcloud;
 
@@ -29,7 +27,6 @@ class AppCommenterCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $io = new SymfonyStyle($input, $output);
         $clientId = $input->getArgument('clientId');
         $clientSecret = $input->getArgument('clientSecret');
         $username = $input->getArgument('username');
@@ -43,7 +40,9 @@ class AppCommenterCommand extends Command
         foreach ($toFollow as $prospect) {
             if ($souncloud->follow($prospect)) {
                 $souncloud->commentLastTrack($prospect);
-                sleep(300 + mt_rand(0, 600));
+                $timeToSleep = 300 + mt_rand(0, 600);
+                dump("We will now wait $timeToSleep seconds before the next comment");
+                sleep($timeToSleep);
             }
         }
     }

@@ -6,64 +6,7 @@ use Njasm\Soundcloud\SoundcloudFacade;
 
 class Soundcloud
 {
-    private $comments = [
-        'cool music',
-        'super moment',
-        'the vibe here is cool',
-        'i like the vibe',
-        'i like the music',
-        'so cool !',
-        'keep on going',
-        'keep on rockin',
-        'this one is great',
-        'sounds great',
-        'amazing',
-        'amazing music bro',
-        'killa',
-        'so much killa',
-        'uberkilla \o/',
-        'that sounds good',
-        'love the music',
-        'great atmosphere',
-        'breathtaking music',
-        'great creation',
-        'gogogo !!',
-        'it s super',
-        'super duper',
-        'cool vibe',
-        'great moment',
-        'crazy',
-        'good stuff',
-        'great stuff',
-        'this rocks',
-        'rockin !',
-        'cool tune',
-        'good one',
-        'nice one',
-        'like it !',
-        'good one',
-        'briliant',
-        'gooood',
-        'good one',
-        'nice bro',
-        'like it',
-        'sweet, dude !',
-        'yeah',
-        'badass',
-        'tuning in',
-        'nice part',
-        'nice track',
-        'i like that :)',
-        'great mate',
-        'sounds fine',
-        'yeah bro',
-        'killer track',
-        'rockin !',
-        'man that sounds cool !',
-        'definitely lovin it',
-        'crazy sounds in this one',
-        'good work on the synths'
-    ];
+    private $comments = [];
 
     /**
      * @var SoundcloudFacade
@@ -87,6 +30,7 @@ class Soundcloud
         $facade = new SoundcloudFacade($clientId, $clientSecret);
         $facade->userCredentials($username, $password);
         $this->facade = $facade;
+        $this->comments = explode("\n", file_get_contents(__DIR__ . '/../../comments.txt'));
     }
 
     /**
@@ -118,6 +62,8 @@ class Soundcloud
             // for instance because we followed too many people lastly
             // check on error code
             $this->facade->put('/me/followings/'.$prospect->id, array())->request();
+
+            dump(sprintf('Following: %s', $prospect->username));
             return true;
         }
 
@@ -176,7 +122,7 @@ class Soundcloud
             ]
         )->request()->bodyObject();
 
-        echo "commented $comment on $track->permalink of ".$track->user->permalink." at $timing";
+        dump("commented \"$comment\" on \"$track->permalink\" of \"".$track->user->permalink."\" at \"$timing\"\n");
     }
 
     /**
@@ -186,12 +132,11 @@ class Soundcloud
     public function getFollowers($userId)
     {
         $cursor = null;
-        $url = '/users/'.$userId.'/followers';
         $relevantFollowerList = [];
         do {
             $followers = $this
                 ->facade
-                ->get($url, ['limit' => 200, 'cursor' => $cursor])
+                ->get('/users/'.$userId.'/followers', ['limit' => 200, 'cursor' => $cursor])
                 ->request()
                 ->bodyObject();
 
@@ -201,7 +146,7 @@ class Soundcloud
                 }
             }
 
-            if (!$followers->next_href) {
+            if (!$followers->next_href || count($relevantFollowerList) > 500) {
                 break;
             }
 
