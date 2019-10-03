@@ -71,6 +71,11 @@ class Soundcloud
     private $facade;
 
     /**
+     * @var string
+     */
+    private $username;
+
+    /**
      * Soundcloud constructor.
      * @param string $clientId
      * @param string $clientSecret
@@ -92,7 +97,7 @@ class Soundcloud
     {
         $artistUrl = sprintf('http://soundcloud.com/%s', $artistName);
         $location = $this->facade->get('/resolve', ['url' => $artistUrl])->request()->bodyObject();
-        $apiLocation = str_replace('https://api.soundcloud.com', '', $location->location);
+        $apiLocation = $this->getRelativePath($location->location);
         $user = $this->facade->get($apiLocation)->request()->bodyObject();
 
         return $user;
@@ -109,6 +114,9 @@ class Soundcloud
             $this->facade->get('/me/followings/'.$prospect->id, array())->request()->bodyObject();
         } catch (\Exception $exception) {
             // not following yet
+            // @TODO: this might also means that we couldn't follow
+            // for instance because we followed too many people lastly
+            // check on error code
             $this->facade->put('/me/followings/'.$prospect->id, array())->request();
             return true;
         }
@@ -116,6 +124,10 @@ class Soundcloud
         return false;
     }
 
+    /**
+     * @param object $user soundcloud user
+     * @return soundcloud track|false if not found
+     */
     public function getUserLastTrack($user)
     {
         $tracks = $this
@@ -131,8 +143,17 @@ class Soundcloud
         return false;
     }
 
+    /**
+     * @param object $user Soundcloud user
+     * @return bool
+     */
     public function commentLastTrack($user)
     {
+        // Do not comment your own tracks.
+        if ($user->username === $this->username) {
+            return false;
+        }
+        
         $lastTrack = $this->getUserLastTrack($user);
         if (!$lastTrack || !$lastTrack->commentable) {
             return false;
@@ -141,6 +162,11 @@ class Soundcloud
         $this->comment($lastTrack, $this->getRandomComment(), $this->getRandomTiming($lastTrack->duration));
     }
 
+    /**
+     * @param object $track Soundcloud track
+     * @param string $comment
+     * @param int $timing
+     */
     public function comment($track, $comment, $timing)
     {
         $this->facade->post(
@@ -184,6 +210,11 @@ class Soundcloud
         } while (42);
 
         return $relevantFollowerList;
+    }
+
+    private function getRelativePath($path)
+    {
+        return str_replace('https://api.soundcloud.com', '', $path);
     }
 
     private function getRandomComment()
