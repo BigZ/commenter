@@ -9,7 +9,6 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-use Njasm\Soundcloud\SoundcloudFacade;
 use App\Service\Soundcloud;
 
 class AppCommenterCommand extends Command
@@ -20,11 +19,11 @@ class AppCommenterCommand extends Command
     {
         $this
             ->setDescription('Soundcloud commenter')
-            ->addArgument('clientId', InputArgument::REQUIRED, 'client id')
-            ->addArgument('clientSecret', InputArgument::REQUIRED, 'client secret')
-            ->addArgument('username', InputArgument::REQUIRED, 'username')
-            ->addArgument('password', InputArgument::REQUIRED, 'password')
             ->addArgument('artist', InputArgument::REQUIRED, 'artist to leech from')
+            ->addArgument('clientId', InputArgument::OPTIONAL, 'client id', $_ENV['SOUNDCLOUD_CLIENT_ID'])
+            ->addArgument('clientSecret', InputArgument::OPTIONAL, 'client secret', $_ENV['SOUNDCLOUD_CLIENT_SECRET'])
+            ->addArgument('username', InputArgument::OPTIONAL, 'username', $_ENV['SOUNDCLOUD_USERNAME'])
+            ->addArgument('password', InputArgument::OPTIONAL, 'password', $_ENV['SOUNDCLOUD_PASSWORD'])
         ;
     }
 
@@ -44,7 +43,7 @@ class AppCommenterCommand extends Command
         foreach ($toFollow as $prospect) {
             if ($souncloud->follow($prospect)) {
                 $souncloud->commentLastTrack($prospect);
-                sleep(60 + mt_rand(0, 120));
+                sleep(300 + mt_rand(0, 600));
             }
         }
     }
